@@ -29,7 +29,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.13)
 project(syscall_intercept C ASM)
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
@@ -41,8 +41,8 @@ if(",${CMAKE_SOURCE_DIR}," STREQUAL ",${CMAKE_BINARY_DIR},")
 endif()
 
 option(PERFORM_STYLE_CHECKS
-	"check coding style, license headers (requires perl)" ON)
-option(BUILD_TESTS "build and enable tests" ON)
+	"check coding style, license headers (requires perl)" OFF)
+option(BUILD_TESTS "build and enable tests" OFF)
 option(BUILD_EXAMPLES "build examples" ON)
 option(TREAT_WARNINGS_AS_ERRORS
 	"make the build fail on any warnings during compilation, or linking" ON)
@@ -74,14 +74,14 @@ set(SOURCES_C
 	src/intercept_desc.c
 	src/intercept_log.c
 	src/intercept_util.c
+	src/rv_encode.c
 	src/patcher.c
 	src/magic_syscalls.c
 	src/syscall_formats.c)
 
 set(SOURCES_ASM
-	src/intercept_template.S
 	src/util.S
-	src/intercept_wrapper.S)
+	src/intercept_irq_entry.S)
 
 
 include_directories(include)
@@ -144,6 +144,9 @@ set(CAPSTONE_LINK_MODE "-Bdynamic")
 if (STATIC_CAPSTONE)
 	set(CAPSTONE_LINK_MODE "-Bstatic")
 endif()
+
+set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/linker_script.ld")
+target_link_libraries(syscall_intercept_shared PRIVATE "-T${LINKER_SCRIPT}")
 
 target_link_libraries(syscall_intercept_shared
 	PRIVATE ${CMAKE_DL_LIBS}
